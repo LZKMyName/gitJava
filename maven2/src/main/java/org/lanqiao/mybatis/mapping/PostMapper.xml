@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.lanqiao.mapper.PostMapper" >
+	<select id="getreplayById" resultType="hashmap" parameterType="int">
+	  <![CDATA[
+  		select post.id postId,post.post_author postAuthor,post.post_title postTitle,post.post_content postContent,post.post_date postDate, replay.id replayId,replay.replay_context replayContext,replay_date replayDate,replay.replay_pid replayPid,replay.replay_author replayAuthor,replay_people replayPeople
+	  	from post left join replay 
+	  	on post.id=replay.replay_post_id 
+	  	where post.id=#{id}
+	  ]]>
+	</select>
+	<select id="getUserByUP" resultType="hashmap">
+	  <![CDATA[
+	  	select * from post_user where user_name=#{username} and user_password =#{password}
+	  ]]>
+	</select>
+	<select id="searchPosts" resultType="hashmap">
+	 <![CDATA[
+	    select id,post_author,post_title,post_date from post 
+	  ]]>
+	  <trim prefix="WHERE 1=1" prefixOverrides="AND |OR " >
+	    <if test="postAuthor!=null">
+	     and post_author like '%' #{postAuthor} '%' 
+	    </if>
+	    <if test="postTitle!=null">
+	     and post_Title like  '%'  #{postTitle} '%'
+	    </if>
+	    <if test="startDate != null and  endDate != null">
+	   		 <![CDATA[ and  UNIX_TIMESTAMP(post_date) >= UNIX_TIMESTAMP(#{startDate}) and UNIX_TIMESTAMP(post_date) <= UNIX_TIMESTAMP(#{endDate})]]>
+	    </if>
+	    	<![CDATA[order by UNIX_TIMESTAMP(post_date)]]>
+	  </trim>
+	</select>
+	<insert id="insertReplay">
+	     <![CDATA[
+	         insert into replay (id,replay_context,replay_post_id,replay_pid,replay_author,replay_date   ]]>
+	         <if test="replay_people!=null">
+	         ,replay_people
+	         </if>
+	         <![CDATA[ ) 
+	         values(#{id},#{replay_context},#{replay_post_id},#{replay_pid},#{replay_author},#{replay_date}
+	         ]]>
+	         <if test="replay_people!=null">
+	         ,#{replay_people}
+	         </if>
+	        <![CDATA[ )]]>
+	</insert>
+	<insert id="addUser" parameterType="hashmap">
+		<![CDATA[insert into post_user (user_name,user_password,user_regdate]]>
+		<if test="userimg!=null">
+			,img
+		</if>
+			<![CDATA[)values(#{username},#{password},#{regdate}]]>
+		<if test="userimg!=null">
+			,#{userimg}
+		</if>
+		)
+	</insert>
+	<delete id="backPosts">
+	      <![CDATA[insert into history select * from post where  id in]]>
+	      <foreach collection="array" item="id"  open="(" separator="," close=")">
+		   		#{id}
+		   </foreach>
+	</delete>
+	<delete id="delPosts">
+			<![CDATA[ delete from posts where id in]]>
+		   <foreach collection="array" item="id"  open="(" separator="," close=")">
+		   		#{id}
+		   </foreach>
+	</delete>
+	<delete id="delPostsReplay">
+		<![CDATA[ delete from replay where replay_post_id in]]>
+			   <foreach collection="array" item="id"  open="(" separator="," close=")">
+			   		#{id}
+		   		</foreach>
+	
+	</delete>
+	<insert id="addPost" parameterType="hashmap">
+		<![CDATA[
+			insert into post (post_author,post_title,post_content,post_date) values(#{username},#{title},#{content},#{postDate})
+		]]>
+	</insert>
+
+</mapper>
